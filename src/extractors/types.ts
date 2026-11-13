@@ -1,4 +1,4 @@
-import type { Node as FigmaDocumentNode, Style } from "@figma/rest-api-spec";
+import type { Comment, Node as FigmaDocumentNode, Style } from "@figma/rest-api-spec";
 import type { SimplifiedTextStyle } from "~/transformers/text.js";
 import type { SimplifiedLayout } from "~/transformers/layout.js";
 import type { SimplifiedFill, SimplifiedStroke } from "~/transformers/style.js";
@@ -9,6 +9,8 @@ import type {
   SimplifiedPropertyDefinition,
 } from "~/transformers/component.js";
 import type { SimplifiedAnnotation } from "~/transformers/annotation.js";
+import type { SimplifiedDevStatus } from "~/transformers/dev-status.js";
+import type { SimplifiedComment } from "~/transformers/comments.js";
 
 export type StyleTypes =
   | SimplifiedTextStyle
@@ -90,6 +92,14 @@ export interface TraversalOptions {
   nodeCounter?: NodeCounter;
 }
 
+export interface SimplifyOptions extends TraversalOptions {
+  /**
+   * The file's comments (`GET /v1/files/:key/comments`). Each thread is placed
+   * on the layer it points at; see transformers/comments.ts.
+   */
+  comments?: Comment[];
+}
+
 /**
  * An extractor function that can modify a SimplifiedNode during traversal.
  *
@@ -116,6 +126,14 @@ export interface SimplifiedDesign {
    * a compact `template` reference. Empty when nothing repeats.
    */
   elements: Record<string, ElementBody>;
+  /**
+   * Comment threads not pinned to any layer (dropped on the bare canvas). Only
+   * present for whole-file reads: a canvas position doesn't say which page it's
+   * on, so for a single node there's no telling whether it belongs there.
+   */
+  comments?: SimplifiedComment[];
+  // What this output is missing and why (e.g. comments the token can't read).
+  notes?: string[];
 }
 
 /**
@@ -124,7 +142,10 @@ export interface SimplifiedDesign {
  * is part of the body (it's intrinsic to the element), so a template reference
  * carries no `type` of its own — consumers resolve it via the element entry.
  */
-export type ElementBody = Omit<SimplifiedNode, "id" | "name" | "children" | "template">;
+export type ElementBody = Omit<
+  SimplifiedNode,
+  "id" | "name" | "children" | "template" | "comments"
+>;
 
 export interface SimplifiedNode {
   id: string;
@@ -168,6 +189,15 @@ export interface SimplifiedNode {
   componentPropertyReferences?: Record<string, string>;
   // Dev Mode annotations — designer notes and pinned properties left on the node.
   annotations?: SimplifiedAnnotation[];
+  // Dev Mode handoff status, only when set ("Ready for dev" or "Completed").
+  devStatus?: SimplifiedDevStatus;
+  /**
+   * Comment threads about this node. Attached after the walk and the finalize
+   * pass (see transformers/comments.ts) because placing a comment needs the
+   * raw tree's geometry, and because comments belong to this occurrence, not
+   * to a deduplicated element body.
+   */
+  comments?: SimplifiedComment[];
   // children
   children?: SimplifiedNode[];
 }

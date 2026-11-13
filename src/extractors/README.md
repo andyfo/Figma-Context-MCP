@@ -38,6 +38,7 @@ const textData = extractFromDesign(nodes, contentOnly, {
 - `visualsExtractor` - Visual appearance (fills, strokes, effects, opacity, borders)
 - `componentExtractor` - Component instance data
 - `annotationExtractor` - Dev Mode annotations (designer notes and pinned properties)
+- `devStatusExtractor` - Dev Mode handoff status ("Ready for dev" / "Completed") on frames and sections
 
 ### Convenience Combinations
 

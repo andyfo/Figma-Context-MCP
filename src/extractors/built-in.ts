@@ -21,6 +21,7 @@ import {
   simplifyPropertyReferences,
 } from "~/transformers/component.js";
 import { isAnnotationArray, simplifyAnnotations } from "~/transformers/annotation.js";
+import { isDevStatus, simplifyDevStatus } from "~/transformers/dev-status.js";
 import { hasAutoLayout, hasValue, isRectangleCornerRadii } from "~/utils/identity.js";
 import { isVisible, stableStringify } from "~/utils/common.js";
 import { createHash } from "node:crypto";
@@ -294,6 +295,19 @@ export const annotationExtractor: ExtractorFn = (node, result, _context) => {
   }
 };
 
+/**
+ * Extracts the Dev Mode handoff status ("Ready for dev" / "Completed") that
+ * designers set on frames and sections.
+ */
+export const devStatusExtractor: ExtractorFn = (node, result, _context) => {
+  if (!hasValue("devStatus", node, isDevStatus)) return;
+
+  const simplified = simplifyDevStatus(node.devStatus);
+  if (simplified) {
+    result.devStatus = simplified;
+  }
+};
+
 type StyleMatch = { name: string; id: string };
 
 // Helper to fetch a Figma style name for specific style keys on a node
@@ -340,6 +354,7 @@ export const allExtractors = [
   visualsExtractor,
   componentExtractor,
   annotationExtractor,
+  devStatusExtractor,
 ];
 
 /**

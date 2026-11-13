@@ -7,8 +7,9 @@ import type {
   Style,
 } from "@figma/rest-api-spec";
 import { simplifyComponents, simplifyComponentSets } from "~/transformers/component.js";
+import { attachComments } from "~/transformers/comments.js";
 import { tagError } from "~/utils/error-meta.js";
-import type { ExtractorFn, TraversalOptions, SimplifiedDesign } from "./types.js";
+import type { ExtractorFn, SimplifyOptions, SimplifiedDesign } from "./types.js";
 import { extractFromDesign } from "./node-walker.js";
 import { finalizeDesign } from "./finalize.js";
 
@@ -18,10 +19,10 @@ import { finalizeDesign } from "./finalize.js";
 export async function simplifyRawFigmaObject(
   apiResponse: GetFileResponse | GetFileNodesResponse,
   nodeExtractors: ExtractorFn[],
-  options: TraversalOptions = {},
+  options: SimplifyOptions = {},
 ): Promise<SimplifiedDesign> {
   // Extract components, componentSets, and raw nodes from API response
-  const { metadata, rawNodes, components, componentSets, extraStyles } =
+  const { metadata, rawNodes, isWholeFile, components, componentSets, extraStyles } =
     parseAPIResponse(apiResponse);
 
   // Process nodes using the flexible extractor system
@@ -40,8 +41,15 @@ export async function simplifyRawFigmaObject(
     traversalState.namedStyleKeys,
   );
 
+  // After finalize, so comments land on the final nodes (template refs
+  // included) and never take part in element deduplication.
+  const unpinnedComments = options.comments
+    ? attachComments(nodes, rawNodes, options.comments, { keepUnpinned: isWholeFile })
+    : [];
+
   return {
     ...metadata,
+    ...(unpinnedComments.length > 0 && { comments: unpinnedComments }),
     nodes,
     components: simplifyComponents(components, traversalState.componentPropertyDefinitions),
     componentSets: simplifyComponentSets(
@@ -103,6 +111,7 @@ function parseAPIResponse(data: GetFileResponse | GetFileNodesResponse) {
       name,
     },
     rawNodes: nodesToParse,
+    isWholeFile: !("nodes" in data),
     extraStyles,
     components: aggregatedComponents,
     componentSets: aggregatedComponentSets,

@@ -177,6 +177,44 @@ describe("result serialization", () => {
       );
     });
 
+    // Same whitelist trap as annotations above: every field a designer leaves
+    // for developers has to reach the default (tree) output.
+    it("emits dev status, comments, notes and canvas comments", () => {
+      const design: SimplifiedDesign = {
+        name: "Test",
+        components: {},
+        componentSets: {},
+        globalVars: { styles: {} },
+        elements: {},
+        notes: ["Comments not included: example"],
+        comments: [{ by: "Cleo", at: "2026-04-22", text: "On the canvas" }],
+        nodes: [
+          {
+            id: "1:1",
+            name: "Hero",
+            type: "FRAME",
+            devStatus: { type: "READY_FOR_DEV" },
+            comments: [{ by: "Ana", at: "2026-05-02", text: "Bigger", resolved: true }],
+          },
+          {
+            id: "1:2",
+            name: "Footer",
+            type: "FRAME",
+            devStatus: { type: "COMPLETED", description: "New links" },
+          },
+        ],
+      };
+
+      const output = serializeResult(wrapForSerialization(design), "tree");
+
+      expect(output).toContain("NOTES:\n- Comments not included: example\n");
+      expect(output).toContain("COMMENTS:\n- by: Cleo");
+      expect(output).toContain(
+        'devStatus=READY_FOR_DEV comments=[{"by":"Ana","at":"2026-05-02","text":"Bigger","resolved":true}]',
+      );
+      expect(output).toContain('devStatus={"type":"COMPLETED","description":"New links"}');
+    });
+
     // After count-gating, single-use style values live inline on the node rather
     // than as a globalVars ref. The tree renderer must emit them as compact JSON.
     it("renders inline (non-reference) style values as JSON", () => {

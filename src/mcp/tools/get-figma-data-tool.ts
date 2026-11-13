@@ -109,7 +109,11 @@ async function getFigmaData(
 export const getFigmaDataTool = {
   name: "get_figma_data",
   description:
-    "Get comprehensive Figma file data including layout, content, visuals, and component information",
+    "Get comprehensive Figma file data including layout, content, visuals, and component information. " +
+    "It also returns what designers left for developers, on the layers it belongs to: Dev Mode annotations, " +
+    "Ready for dev status, and comment threads. Treat annotations and open comments as instructions; resolved " +
+    "comments are history and may already be done. A comment only shows if the frame it is pinned to is inside " +
+    "the fetched node, so fetch a whole frame to see all of its comments.",
   parametersSchema,
   handler: getFigmaData,
 } as const;

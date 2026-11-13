@@ -719,6 +719,32 @@ describe("annotationExtractor", () => {
   });
 });
 
+describe("devStatusExtractor", () => {
+  it("keeps Ready for dev and Completed with the designer's note, and drops no status", async () => {
+    const { nodes } = await extractFromDesign(
+      [
+        makeNode({
+          id: "30:1",
+          name: "Hero",
+          type: "FRAME",
+          devStatus: { type: "READY_FOR_DEV", description: "Final copy" },
+        }),
+        makeNode({ id: "30:2", name: "Footer", type: "SECTION", devStatus: { type: "COMPLETED" } }),
+        makeNode({ id: "30:3", name: "Cleared", type: "FRAME", devStatus: { type: "NONE" } }),
+        makeNode({ id: "30:4", name: "Never set", type: "FRAME", devStatus: null }),
+      ],
+      allExtractors,
+    );
+
+    expect(nodes.map((node) => node.devStatus)).toEqual([
+      { type: "READY_FOR_DEV", description: "Final copy" },
+      { type: "COMPLETED" },
+      undefined,
+      undefined,
+    ]);
+  });
+});
+
 describe("simplifyRawFigmaObject", () => {
   it("produces a complete SimplifiedDesign from a mock API response", async () => {
     const mockResponse = {

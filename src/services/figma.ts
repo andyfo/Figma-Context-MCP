@@ -1,4 +1,6 @@
 import type {
+  Comment,
+  GetCommentsResponse,
   GetImagesResponse,
   GetFileResponse,
   GetFileNodesResponse,
@@ -317,6 +319,18 @@ export class FigmaService {
     writeLogs("figma-raw.json", result.data);
 
     return result;
+  }
+
+  /**
+   * Get a file's comments, with message text as Markdown. Needs the token's
+   * Comments read scope (`file_comments:read`), which design reads don't, so
+   * callers should expect a 403 from tokens made for design reads only.
+   */
+  async getComments(fileKey: string): Promise<Comment[]> {
+    const { comments } = await this.request<GetCommentsResponse>(
+      `/files/${fileKey}/comments?as_md=true`,
+    );
+    return comments;
   }
 
   /**
