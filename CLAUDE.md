@@ -32,11 +32,11 @@ pnpm test -- --testNamePattern="pattern"
 
 ### Releasing
 
-Releases are automated via [release-please](https://github.com/googleapis/release-please). On merge to `main`, release-please reads conventional commit prefixes (`fix:`, `feat:`, `feat!:`) and maintains a release PR. Merging the release PR publishes to npm via OIDC trusted publishing.
+This repo is WP Godmode's fork (`andyfo/Figma-Context-MCP`, package `godmode-figma-mcp`), and it doesn't publish to npm. To release: bump `version` in `package.json`, merge, then push a `vX.Y.Z` tag on `main`. `.github/workflows/release.yml` runs the checks, builds, and attaches the `npm pack` tarball to a GitHub Release. Consumers install it by URL and their lockfile pins the sha512. Keep the fork section at the top of the README up to date.
 
 ### PR Title Convention
 
-PRs are squash-merged, so the PR title becomes the commit message that release-please parses. Always use [Conventional Commit](https://www.conventionalcommits.org/) prefixes in PR titles.
+Use [Conventional Commit](https://www.conventionalcommits.org/) prefixes. In this fork, merge PRs with rebase rather than squash, so each of our changes stays a separate commit on top of upstream and rebasing onto a new upstream release stays easy. Open PRs against the fork (`gh pr create --repo andyfo/Figma-Context-MCP`): without `--repo`, `gh` targets upstream.
 
 ## Architecture
 

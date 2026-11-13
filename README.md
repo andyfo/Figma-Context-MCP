@@ -1,3 +1,22 @@
+## WP Godmode fork
+
+**This is WP Godmode's fork of [Framelink MCP for Figma](https://github.com/GLips/Figma-Context-MCP), released as `godmode-figma-mcp`.** Everything below the divider is upstream's README.
+
+What's different from upstream (based on upstream `c083d65`: v0.13.2 plus one fix):
+
+- **Dev Mode annotations** on the layers they're attached to (upstream PR [#425](https://github.com/GLips/Figma-Context-MCP/pull/425), cherry-picked).
+- **Ready for dev status** ("Ready for dev" / "Completed", with the designer's note) on frames and sections.
+- **Comment threads**, open and resolved, each placed on the layer its pin points at. Figma pins comments to a frame plus an offset, so the thread goes to the deepest container under the pin. Comments need the token's Comments read scope (`file_comments:read`); without it the output carries a note and the design still comes back.
+- **Released on GitHub, not npm.** Each `vX.Y.Z` tag attaches the package tarball to a [release](https://github.com/andyfo/Figma-Context-MCP/releases). Install it by URL so your lockfile pins its sha512:
+
+  ```bash
+  npm install https://github.com/andyfo/Figma-Context-MCP/releases/download/v1.0.0/godmode-figma-mcp-1.0.0.tgz
+  ```
+
+Our changes stay as separate commits on top of upstream, so each upstream release can be rebased onto.
+
+---
+
 <a href="https://www.framelink.ai/?utm_source=github&utm_medium=referral&utm_campaign=readme" target="_blank" rel="noopener">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://www.framelink.ai/github/HeaderDark.png" />
