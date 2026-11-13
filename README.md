@@ -7,6 +7,7 @@ What's different from upstream (based on upstream `c083d65`: v0.13.2 plus one fi
 - **Dev Mode annotations** on the layers they're attached to (upstream PR [#425](https://github.com/GLips/Figma-Context-MCP/pull/425), cherry-picked).
 - **Ready for dev status** ("Ready for dev" / "Completed", with the designer's note) on frames and sections.
 - **Comment threads**, open and resolved, each placed on the layer its pin points at. Figma pins comments to a frame plus an offset, so the thread goes to the deepest container under the pin. Comments need the token's Comments read scope (`file_comments:read`); without it the output carries a note and the design still comes back.
+- **MCP SDK 1.32.2** instead of upstream's exact pin of 1.29.0, which has known advisories in its HTTP and OAuth code. The private `validateToolInput` method that `src/mcp/validation-capture.ts` patches is still there.
 - **Released on GitHub, not npm.** Each `vX.Y.Z` tag attaches the package tarball to a [release](https://github.com/andyfo/Figma-Context-MCP/releases). Install it by URL so your lockfile pins its sha512:
 
   ```bash
