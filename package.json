@@ -1,6 +1,6 @@
 {
   "name": "godmode-figma-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "WP Godmode's fork of Framelink MCP for Figma: design data plus Dev Mode annotations, Ready for dev status and comments.",
   "type": "module",
   "main": "dist/index.js",
