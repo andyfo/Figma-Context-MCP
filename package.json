@@ -1,12 +1,11 @@
 {
-  "name": "figma-developer-mcp",
-  "version": "0.13.2",
-  "mcpName": "io.github.GLips/Figma-Context-MCP",
-  "description": "Give your coding agent access to your Figma data. Implement designs in any framework in one-shot.",
+  "name": "godmode-figma-mcp",
+  "version": "1.0.0",
+  "description": "WP Godmode's fork of Framelink MCP for Figma: design data plus Dev Mode annotations, Ready for dev status and comments.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "figma-developer-mcp": "dist/bin.js"
+    "godmode-figma-mcp": "dist/bin.js"
   },
   "files": [
     "dist",
@@ -39,9 +38,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/GLips/Figma-Context-MCP.git"
+    "url": "git+https://github.com/andyfo/Figma-Context-MCP.git"
   },
-  "homepage": "https://www.framelink.ai",
+  "homepage": "https://github.com/andyfo/Figma-Context-MCP#readme",
   "keywords": [
     "figma",
     "mcp",

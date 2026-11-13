@@ -1,70 +1,62 @@
 name: Release
 
+# WP Godmode's fork releases on GitHub instead of npm. A `vX.Y.Z` tag runs the
+# same checks as CI, builds, and attaches the `npm pack` tarball to a GitHub
+# Release. Consumers install it by URL and their lockfile pins its sha512, so
+# no registry account or token is involved beyond this workflow's own.
+
 on:
   push:
-    branches:
-      - main
+    tags:
+      - "v*"
 
 permissions:
-  contents: write
-  pull-requests: write
-  id-token: write # Required for npm OIDC trusted publishing
+  contents: write # create the release and upload the tarball
 
 jobs:
-  release-please:
-    if: ${{ github.repository_owner == 'GLips' }}
+  release:
+    name: Check, build and release
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
-      - uses: googleapis/release-please-action@v4
-        id: release
-
       - uses: actions/checkout@v4
-        if: ${{ steps.release.outputs.release_created }}
+      - uses: ./.github/actions/setup
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.10.0
-        if: ${{ steps.release.outputs.release_created }}
+      - name: Tag matches package.json version
+        run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          registry-url: "https://registry.npmjs.org"
-        if: ${{ steps.release.outputs.release_created }}
+      - name: Scan for hidden characters
+        run: node scripts/scan-hidden-chars.mjs
 
-      - name: Install dependencies
-        run: pnpm install
-        if: ${{ steps.release.outputs.release_created }}
+      - name: Check formatting
+        run: pnpm prettier --check "src/**/*.ts"
+
+      - name: Lint
+        run: pnpm lint
 
       - name: Type check
         run: pnpm type-check
-        if: ${{ steps.release.outputs.release_created }}
 
-      - name: Build
-        run: pnpm build
-        if: ${{ steps.release.outputs.release_created }}
+      - name: Test
+        run: pnpm test
 
-      - name: Publish to npm
-        run: pnpm publish --no-git-checks
+      - name: Build and pack
+        id: pack
+        run: |
+          pnpm build
+          npm pack --ignore-scripts --json > pack.json
+          echo "file=$(jq -r '.[0].filename' pack.json)" >> "$GITHUB_OUTPUT"
+          echo "integrity=$(jq -r '.[0].integrity' pack.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Create the release
         env:
-          NODE_ENV: production
-        if: ${{ steps.release.outputs.release_created }}
-
-      - name: Update server.json version
+          GH_TOKEN: ${{ github.token }}
+          FILE: ${{ steps.pack.outputs.file }}
+          INTEGRITY: ${{ steps.pack.outputs.integrity }}
         run: |
-          VERSION="${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}.${{ steps.release.outputs.patch }}"
-          jq --arg v "$VERSION" '.version = $v | .packages[0].version = $v' server.json > server.tmp && mv server.tmp server.json
-        if: ${{ steps.release.outputs.release_created }}
-
-      - name: Install mcp-publisher
-        run: |
-          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
-        if: ${{ steps.release.outputs.release_created }}
-
-      - name: Publish to MCP Registry
-        run: |
-          ./mcp-publisher login github-oidc
-          ./mcp-publisher publish
-        if: ${{ steps.release.outputs.release_created }}
+          URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/${FILE}"
+          {
+            echo "Install: \`npm install ${URL}\`"
+            echo
+            echo "sha512 that package-lock.json records as \`integrity\`: \`${INTEGRITY}\`"
+          } > notes.md
+          gh release create "$GITHUB_REF_NAME" "$FILE" --title "$GITHUB_REF_NAME" --notes-file notes.md
