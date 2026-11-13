@@ -6,6 +6,7 @@ export type {
   ExtractorFn,
   TraversalContext,
   TraversalOptions,
+  SimplifyOptions,
   GlobalVars,
   StyleTypes,
 } from "./extractors/index.js";
@@ -18,6 +19,7 @@ export {
   visualsExtractor,
   componentExtractor,
   annotationExtractor,
+  devStatusExtractor,
   allExtractors,
   layoutAndText,
   contentOnly,

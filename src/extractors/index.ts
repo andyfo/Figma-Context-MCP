@@ -5,6 +5,7 @@ export type {
   SimplifiedNode,
   TraversalContext,
   TraversalOptions,
+  SimplifyOptions,
   TraversalState,
   GlobalVars,
   StyleTypes,
@@ -23,6 +24,7 @@ export {
   visualsExtractor,
   componentExtractor,
   annotationExtractor,
+  devStatusExtractor,
   // Convenience combinations
   allExtractors,
   layoutAndText,

@@ -23,6 +23,19 @@ export function serializeAsTree(design: SerializableDesign): string {
   // whitespace, which would otherwise produce a malformed `NAME: foo: bar` line.
   sections.push(`NAME: ${quote(design.metadata.name)}`);
 
+  // First, so a reader knows what's missing before trusting what's there.
+  // Plain lines, not YAML: notes are our own one-line sentences, and YAML's
+  // quoting (`can''t`) only gets in the way of reading them.
+  if (design.metadata.notes?.length) {
+    sections.push(`NOTES:\n${design.metadata.notes.map((note) => `- ${note}`).join("\n")}\n`);
+  }
+
+  // Comments on the bare canvas (whole-file reads only). Comments pinned to a
+  // layer are on that node's line below.
+  if (design.metadata.comments?.length) {
+    sections.push(`COMMENTS:\n${dumpYaml(design.metadata.comments)}`);
+  }
+
   if (Object.keys(design.globalVars.styles).length > 0) {
     sections.push(`\nGLOBAL_VARS:\n${dumpYaml(design.globalVars.styles)}`);
   }
@@ -95,6 +108,13 @@ function renderNode(
   if (node.annotations !== undefined) {
     parts.push(`annotations=${JSON.stringify(node.annotations)}`);
   }
+  if (node.devStatus !== undefined) {
+    // Bare status in the common case; the note, when there is one, needs JSON.
+    parts.push(
+      `devStatus=${node.devStatus.description ? JSON.stringify(node.devStatus) : node.devStatus.type}`,
+    );
+  }
+  if (node.comments !== undefined) parts.push(`comments=${JSON.stringify(node.comments)}`);
 
   out.push(indent + parts.join(" "));
 

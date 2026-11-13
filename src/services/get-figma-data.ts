@@ -1,14 +1,14 @@
-import type { GetFileResponse, GetFileNodesResponse } from "@figma/rest-api-spec";
+import type { Comment, GetFileResponse, GetFileNodesResponse } from "@figma/rest-api-spec";
 import { FigmaService } from "~/services/figma.js";
 import {
   simplifyRawFigmaObject,
   allExtractors,
   collapseSvgContainers,
 } from "~/extractors/index.js";
-import { writeLogs } from "~/utils/logger.js";
+import { Logger, writeLogs } from "~/utils/logger.js";
 import { serializeResult, type OutputFormat } from "~/utils/serialize.js";
 import { wrapForSerialization } from "~/utils/serializable-design.js";
-import { tagError } from "~/utils/error-meta.js";
+import { getErrorMeta, tagError } from "~/utils/error-meta.js";
 import {
   type GetFigmaDataMetrics,
   measureSimplifiedDesign,
@@ -87,13 +87,17 @@ export async function getFigmaData(
   try {
     await hooks.onFetchStart?.();
     let rawResult: { data: GetFileResponse | GetFileNodesResponse; rawSize: number };
+    let comments: CommentsResult;
     const fetchStart = Date.now();
     try {
+      // In flight alongside the design read, so comments add no wait.
+      const commentsRequest = fetchComments(figmaService, fileKey);
       if (nodeId) {
         rawResult = await figmaService.getRawNode(fileKey, nodeId, depth);
       } else {
         rawResult = await figmaService.getRawFile(fileKey, depth);
       }
+      comments = await commentsRequest;
     } catch (error) {
       tagError(error, { phase: "fetch" });
     } finally {
@@ -111,7 +115,9 @@ export async function getFigmaData(
         maxDepth: depth,
         afterChildren: collapseSvgContainers,
         nodeCounter,
+        comments: comments.comments,
       });
+      if (comments.note) simplifiedDesign.notes = [comments.note];
     } catch (error) {
       tagError(error, { phase: "simplify" });
     } finally {
@@ -174,5 +180,32 @@ export async function getFigmaData(
         // intentionally empty
       }
     }
+  }
+}
+
+type CommentsResult = { comments?: Comment[]; note?: string };
+
+/**
+ * Never rejects. Comments come on top of the design, and a token without the
+ * comments scope or a rate-limited comments endpoint must not cost the caller
+ * the design itself. The note tells the reader what's missing and why.
+ */
+async function fetchComments(figmaService: FigmaService, fileKey: string): Promise<CommentsResult> {
+  try {
+    return { comments: await figmaService.getComments(fileKey) };
+  } catch (error) {
+    Logger.error(`Comments for ${fileKey} not included:`, error);
+    const status = getErrorMeta(error).http_status;
+    if (status === 403) {
+      return {
+        note: "Comments not included: this Figma token can't read comments. Create a token with the Comments read scope (file_comments:read) to include them.",
+      };
+    }
+    if (status === 429) {
+      return {
+        note: "Comments not included: Figma's rate limit for reading comments was reached. Try again in a minute.",
+      };
+    }
+    return { note: "Comments not included: Figma didn't return them." };
   }
 }
