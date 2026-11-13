@@ -11,7 +11,7 @@ What's different from upstream (based on upstream `c083d65`: v0.13.2 plus one fi
 - **Released on GitHub, not npm.** Each `vX.Y.Z` tag attaches the package tarball to a [release](https://github.com/andyfo/Figma-Context-MCP/releases). Install it by URL so your lockfile pins its sha512:
 
   ```bash
-  npm install https://github.com/andyfo/Figma-Context-MCP/releases/download/v1.0.0/godmode-figma-mcp-1.0.0.tgz
+  npm install https://github.com/andyfo/Figma-Context-MCP/releases/download/v1.0.1/godmode-figma-mcp-1.0.1.tgz
   ```
 
 Our changes stay as separate commits on top of upstream, so each upstream release can be rebased onto.
